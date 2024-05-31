@@ -10,13 +10,14 @@
 #     ssh_key_comment: "root@{{ ansible_host }}"
 
 - name: "Install | add `keyscan` output from the server hosting Borg repo"
-  ansible.builtin.lineinfile:
+  ansible.builtin.blockinfile:
     path: /root/.ssh/known_hosts
     create: true
     owner: root
     group: root
     mode: "0600"
-    line: "{{ repo_keyscan_val }}"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK {{ server.ip }}"
+    block: "{{ repo_keyscan_val }}"
 
 - name: "Install | packages (Debian)"
   when: ansible_os_family == "Debian"
