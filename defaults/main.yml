@@ -1,1 +1,3 @@
 ---
+version: 0.1.1
+timer_oncalendar: '*-*-* 00:00:00'  # every day at midnight local time

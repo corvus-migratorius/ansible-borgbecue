@@ -1,0 +1,12 @@
+---
+user: test
+passphrase: secret
+manifest: /path/to/versioned-daily.fofn
+server:
+  ip: "1.2.3.4"
+  port: 22
+  repository: "/backups/test"
+keep:
+  daily: 7
+  weekly: 4
+  monthly: 1

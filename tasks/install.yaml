@@ -1,0 +1,88 @@
+- name: "Install | Read secret variables"
+  ansible.builtin.include_vars:
+    file: "{{ config }}"
+
+# - name: "Install | ensure the root user has an SSH key pair generated"
+#   ansible.builtin.user:
+#     name: root
+#     generate_ssh_key: true
+#     ssh_key_type: ed25519
+#     ssh_key_comment: "root@{{ ansible_host }}"
+
+- name: "Install | add public host key from the repo server"
+  ansible.builtin.lineinfile:
+    path: /root/.ssh/known_hosts
+    create: true
+    owner: root
+    group: root
+    mode: "0600"
+    line: "{{ server.ip }} {{ repo_host_pubkey }}"
+
+- name: "Install | packages"
+  ansible.builtin.package:
+    name:
+      - borgbackup
+      - openssh-client
+    state: present
+    update_cache: true
+
+- name: "Install | install `borgbecue`"
+  block:
+    - name: "Install | check if `borgbecue` is accessible from PATH"
+      changed_when: false
+      register: version_installed
+      ansible.builtin.command:
+        cmd: borgbecue --version
+
+    - name: "Install | assert that the requested version is already installed"
+      ansible.builtin.assert:
+        that: "version in version_installed.stdout"
+        success_msg: "expected version available ({{ version }})"
+        fail_msg: "expected version: {{ version }}, actual: {{ version_installed.stdout }}"
+
+  rescue:
+    # - name: "Install | create temporary directory"
+    #   ansible.builtin.file:
+    #     name: "{{ temp_dir }}"
+    #     state: directory
+    #     owner: root
+    #     group: root
+    #     mode: "0770"
+
+    - name: "Install | Create a temporary build directory"
+      register: tmpdir
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: build
+
+    - name: "Install | fetch and unpack release tarball"
+      ansible.builtin.unarchive:
+        remote_src: true
+        src: "{{ repo | regex_replace('.git$', '') }}/releases/download/{{ version }}/borgbecue-{{ version }}.tar.gz"
+        dest: "{{ tmpdir.path }}"
+
+    - name: "Install | deploy distribution files"
+      notify: "Enable-Restart"
+      loop:
+        - {name: "borgbecue", mode: "0770", dest: "/usr/bin/borgbecue"}
+        - {name: "borgbecue.service", mode: "0660", dest: "/etc/systemd/system/borgbecue.service" }
+        - {name: "borgbecue.timer", mode: "0660", dest: "/etc/systemd/system/borgbecue.timer" }
+      ansible.builtin.copy:
+        remote_src: true
+        src: "{{ tmpdir.path }}/{{ item.name }}"
+        dest: "{{ item.dest }}"
+        owner: root
+        group: root
+        mode: "{{ item.mode }}"
+
+    - name: "Install | clean up the temporary directory"
+      when: tmpdir.path is defined
+      ansible.builtin.file:
+        path: "{{ tmpdir.path }}"
+        state: absent
+
+    # - name: "Install | run 'make clean' post-installation"
+    #   notify: "Enable-Restart"
+    #   community.general.make:
+    #     chdir: "{{ tmpdir.path }}"
+    #     target: "clean"

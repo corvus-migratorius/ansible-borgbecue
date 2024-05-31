@@ -2,4 +2,9 @@
 - name: Converge
   hosts: all
   roles:
-    - role: genlab.template
+    # NOTE: runs using default role variables
+    - role: genlab.ansible_borgbecue
+      config: "config.yaml"
+      repo: https://github.com/corvus-migratorius/borgbecue.git
+      timer_oncalendar: '*-*-* 00:00:00'
+      repo_host_pubkey: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGitFPqR7twLZZ2uvOPl1QFRQPAGjdFsiMTGM26O7JX9 root@server
