@@ -18,11 +18,21 @@
     mode: "0600"
     line: "{{ server.ip }} {{ repo_host_pubkey }}"
 
-- name: "Install | packages"
-  ansible.builtin.package:
+- name: "Install | packages (Debian)"
+  when: ansible_os_family == "Debian"
+  ansible.builtin.apt:
     name:
       - borgbackup
       - openssh-client
+    state: present
+    update_cache: true
+
+- name: "Install | packages (RHEL)"
+  when: ansible_os_family == "RHEL"
+  ansible.builtin.package:
+    name:
+      - borgbackup
+      - openssh
     state: present
     update_cache: true
 
