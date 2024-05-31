@@ -1,0 +1,27 @@
+---
+- name: "Configure | create a directory under /etc"
+  ansible.builtin.file:
+    name: "/etc/borgbecue"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+
+- name: "Configure | override default configuration file"
+  notify: "Enable-Restart"
+  ansible.builtin.copy:
+    src: "{{ config }}"
+    dest: "/etc/borgbecue/borgbecue.yaml"
+    owner: root
+    group: root
+    mode: '0640'
+
+- name: "Configure | configure invocation interval in the deployed timer"
+  notify: "Enable-Restart"
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/system/borgbecue.timer
+    regexp: "^OnCalendar"
+    line: "OnCalendar={{ timer_oncalendar }}"
+    owner: root
+    group: root
+    mode: '0644'
