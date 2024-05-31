@@ -17,7 +17,8 @@
     group: root
     mode: "0600"
     marker: "# {mark} ANSIBLE MANAGED BLOCK {{ server.ip }}"
-    block: "{{ repo_keyscan_val }}"
+    block: >
+      {{ repo_keyscan_val }}"
 
 - name: "Install | packages (Debian)"
   when: ansible_os_family == "Debian"
