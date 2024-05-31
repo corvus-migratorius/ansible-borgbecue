@@ -9,14 +9,14 @@
 #     ssh_key_type: ed25519
 #     ssh_key_comment: "root@{{ ansible_host }}"
 
-- name: "Install | add public host key from the repo server"
+- name: "Install | add `keyscan` output from the server hosting Borg repo"
   ansible.builtin.lineinfile:
     path: /root/.ssh/known_hosts
     create: true
     owner: root
     group: root
     mode: "0600"
-    line: "{{ server.ip }} {{ repo_host_pubkey }}"
+    line: "{{ repo_keyscan_val }}"
 
 - name: "Install | packages (Debian)"
   when: ansible_os_family == "Debian"

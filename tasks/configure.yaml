@@ -25,3 +25,11 @@
     owner: root
     group: root
     mode: '0644'
+
+- name: "Configure | create a directory for the manifest file"
+  ansible.builtin.file:
+    name: "{{ config.server.repository | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
